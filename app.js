@@ -1,9 +1,8 @@
 (() => {
   "use strict";
 
-  const EVENT_START_UTC_MS = Date.UTC(2026, 1, 10, 16, 0, 0);
-  const EVENT_DAYS = 14;
-  const EVENT_END_UTC_MS = EVENT_START_UTC_MS + EVENT_DAYS * 24 * 3600 * 1000;
+  let EVENT_START_UTC_MS = Date.UTC(2026, 1, 10, 16, 0, 0);
+  let EVENT_END_UTC_MS = EVENT_START_UTC_MS + 14 * 24 * 3600 * 1000;
 
   const MAX_FEET = 500;
   const HUNTS_PER_DAY_CAP = 120;
@@ -21,10 +20,12 @@
     ngd: document.getElementById("ngd"),
     whiteInv: document.getElementById("whiteInv"),
     redInv: document.getElementById("redInv"),
-    leaveDumplings: document.getElementById("leaveDumplings"),
-    leaveNGD: document.getElementById("leaveNGD"),
-    leaveWhite: document.getElementById("leaveWhite"),
-    leaveRed: document.getElementById("leaveRed"),
+    chestsNormal: document.getElementById("chestsNormal"),
+    chestsRare: document.getElementById("chestsRare"),
+    reserveDumplings: document.getElementById("reserveDumplings"),
+    reserveNGD: document.getElementById("reserveNGD"),
+    reserveWhite: document.getElementById("reserveWhite"),
+    reserveRed: document.getElementById("reserveRed"),
     rateDumplings: document.getElementById("rateDumplings"),
     rateWhite: document.getElementById("rateWhite"),
     rateRed: document.getElementById("rateRed"),
@@ -73,13 +74,18 @@
   }
 
   function remainingDaysFrom(planStartMs) {
-    if (planStartMs <= EVENT_START_UTC_MS) return EVENT_DAYS;
+    if (planStartMs <= EVENT_START_UTC_MS) return (EVENT_END_UTC_MS - EVENT_START_UTC_MS) / (24 * 3600 * 1000);
     if (planStartMs >= EVENT_END_UTC_MS) return 0;
     return (EVENT_END_UTC_MS - planStartMs) / (24 * 3600 * 1000);
   }
 
   function remainingHunts(huntsPerDay, planStartMs) {
     const days = remainingDaysFrom(planStartMs);
+    return Math.max(0, Math.floor(huntsPerDay * days));
+  }
+
+  function totalEventHunts(huntsPerDay) {
+    const days = (EVENT_END_UTC_MS - EVENT_START_UTC_MS) / (24 * 3600 * 1000);
     return Math.max(0, Math.floor(huntsPerDay * days));
   }
 
@@ -93,24 +99,56 @@
     return false;
   }
 
+  function rewardBetween(h0, h1) {
+    h0 = Math.max(0, Math.min(MAX_FEET, Math.trunc(h0)));
+    h1 = Math.max(0, Math.min(MAX_FEET, Math.trunc(h1)));
+    if (h1 <= h0) return { ngd: 0, red: 0 };
+
+    const a = Math.floor(h0 / 30);
+    const b = Math.floor(h1 / 30);
+    const crossed30Multiples = Math.max(0, b - a);
+
+    let ngd = crossed30Multiples * 3;
+    if (h0 < 30 && h1 >= 30) ngd += 5;
+
+    let red = 0;
+    if (h0 < 300 && h1 >= 300) red += 5;
+    if (h0 < 500 && h1 >= 500) red += 10;
+
+    return { ngd, red };
+  }
+
   function computeBestPlan(p) {
     const huntsPerDay = clampInt(p.huntsPerDay, 0, HUNTS_PER_DAY_CAP);
     const planStart = p.planStartMs;
+
     const remDays = remainingDaysFrom(planStart);
     const remHunts = remainingHunts(huntsPerDay, planStart);
+    const totalHunts = totalEventHunts(huntsPerDay);
 
     const currentHeight = clampInt(p.currentHeight, 0, MAX_FEET);
     const maxGain = MAX_FEET - currentHeight;
 
-    const dumplings0 = Math.max(0, Math.trunc(p.dumplings));
-    const ngd0 = Math.max(0, Math.trunc(p.ngd));
-    const whiteInv0 = Math.max(0, Math.trunc(p.whiteInv));
-    const redInv0 = Math.max(0, Math.trunc(p.redInv));
+    const chN = Math.max(0, Math.trunc(p.chestsNormal));
+    const chR = Math.max(0, Math.trunc(p.chestsRare));
 
-    const leaveD = Math.max(0, Math.trunc(p.leaveDumplings));
-    const leaveN = Math.max(0, Math.trunc(p.leaveNGD));
-    const leaveW = Math.max(0, Math.trunc(p.leaveWhite));
-    const leaveR = Math.max(0, Math.trunc(p.leaveRed));
+    const chestD = 10 * chN + 20 * chR;
+    const chestW = 2 * chN + 6 * chR;
+
+    const dumplings0_raw = Math.max(0, Math.trunc(p.dumplings));
+    const ngd0_raw = Math.max(0, Math.trunc(p.ngd));
+    const whiteInv0_raw = Math.max(0, Math.trunc(p.whiteInv));
+    const redInv0_raw = Math.max(0, Math.trunc(p.redInv));
+
+    const dumplings0 = dumplings0_raw + chestD;
+    const ngd0 = ngd0_raw;
+    const whiteInv0 = whiteInv0_raw + chestW;
+    const redInv0 = redInv0_raw;
+
+    const reserveD = Math.max(0, Math.trunc(p.reserveDumplings));
+    const reserveN = Math.max(0, Math.trunc(p.reserveNGD));
+    const reserveW = Math.max(0, Math.trunc(p.reserveWhite));
+    const reserveR = Math.max(0, Math.trunc(p.reserveRed));
 
     const rD = clampNum(p.rateDumplings, 0, 1e9);
     const rW = clampNum(p.rateWhite, 0, 1e9);
@@ -118,18 +156,18 @@
 
     let best = null;
 
-    const XMAX = Math.min(Math.max(0, ngd0 - leaveN), remHunts);
+    const XMAX = Math.min(Math.max(0, ngd0 - reserveN), remHunts);
     const YMAX = remHunts;
 
     for (let x = 0; x <= XMAX; x++) {
-      const whiteFromNGD = Math.floor(rW * x);
-      const redFromNGD = Math.floor(rR * x);
+      const whiteFromNGDBase = Math.floor(rW * x);
+      const redFromNGDBase = Math.floor(rR * x);
 
       for (let y = 0; y <= YMAX; y++) {
         let z = 0;
-        if (dumplings0 < y + leaveD) {
+        if (dumplings0 < y + reserveD) {
           if (rD <= 0) continue;
-          const need = (y + leaveD) - dumplings0;
+          const need = (y + reserveD) - dumplings0;
           z = ceilDiv(need, rD);
           while (Math.floor(rD * z) < need) z++;
         }
@@ -142,38 +180,57 @@
         const huntsLeft = remHunts - farming;
 
         const producedD = Math.floor(rD * z);
-        if (dumplings0 + producedD - y < leaveD) continue;
-        if (ngd0 - x < leaveN) continue;
+        if (dumplings0 + producedD - y < reserveD) continue;
 
         const whiteFromD = Math.floor(rW * y);
 
-        const whiteTotal = whiteInv0 + whiteFromNGD + whiteFromD;
-        const redTotal = redInv0 + redFromNGD;
+        const whiteTotalBase = whiteInv0 + whiteFromNGDBase + whiteFromD;
+        const redTotalBase = redInv0 + redFromNGDBase;
 
-        const spendableWhite = Math.max(0, whiteTotal - leaveW);
-        const spendableRed = Math.max(0, redTotal - leaveR);
-        const spendableCandles = spendableWhite + spendableRed;
+        let rewardNGD = 0;
+        let rewardRed = 0;
 
-        const spendBudget = Math.min(huntsLeft, spendableCandles);
+        let spendRed = 0;
+        let spendWhite = 0;
+        let endHeight = currentHeight;
+        let spendBudget = 0;
 
-        const spendRed = Math.min(spendableRed, spendBudget);
-        const spendWhite = spendBudget - spendRed;
+        for (let iter = 0; iter < 12; iter++) {
+          const spendableWhite = Math.max(0, whiteTotalBase - reserveW);
+          const spendableRed = Math.max(0, (redTotalBase + rewardRed) - reserveR);
+          const spendableCandles = spendableWhite + spendableRed;
 
-        const afterWhite = whiteTotal - spendWhite;
-        const afterRed = redTotal - spendRed;
+          spendBudget = Math.min(huntsLeft, spendableCandles);
+          spendRed = Math.min(spendableRed, spendBudget);
+          spendWhite = spendBudget - spendRed;
 
-        if (afterWhite < leaveW) continue;
-        if (afterRed < leaveR) continue;
+          const gain = Math.min(maxGain, spendWhite + 2 * spendRed);
+          endHeight = Math.min(MAX_FEET, currentHeight + gain);
 
-        const gain = Math.min(maxGain, spendWhite + 2 * spendRed);
-        const endHeight = Math.min(MAX_FEET, currentHeight + gain);
+          const rwd = rewardBetween(currentHeight, endHeight);
+          if (rwd.ngd === rewardNGD && rwd.red === rewardRed) break;
+
+          rewardNGD = rwd.ngd;
+          rewardRed = rwd.red;
+        }
+
+        if (ngd0 + rewardNGD - x < reserveN) continue;
+
+        const afterWhite = whiteTotalBase - spendWhite;
+        const afterRed = (redTotalBase + rewardRed) - spendRed;
+
+        if (afterWhite < reserveW) continue;
+        if (afterRed < reserveR) continue;
+
+        const gainFinal = Math.min(maxGain, spendWhite + 2 * spendRed);
+        const endHeightFinal = Math.min(MAX_FEET, currentHeight + gainFinal);
 
         const canKeepUntilEnd = (spendBudget >= huntsLeft);
 
         const dumplingsAfter = dumplings0 + producedD - y;
-        const ngdAfter = ngd0 - x;
+        const ngdAfter = ngd0 + rewardNGD - x;
 
-        const key = [-endHeight, canKeepUntilEnd ? 0 : 1, -spendBudget, farming];
+        const key = [-endHeightFinal, canKeepUntilEnd ? 0 : 1, -spendBudget, farming];
 
         if (!best || lexLess(key, best.key)) {
           best = {
@@ -182,10 +239,11 @@
             planStartMs: planStart,
             remDays,
             remHunts,
+            totalHunts,
 
             currentHeight,
-            endHeight,
-            gain,
+            endHeight: endHeightFinal,
+            gain: gainFinal,
             maxGain,
 
             x, y, z,
@@ -199,16 +257,27 @@
 
             rD, rW, rR,
 
+            chN, chR,
+            chestD, chestW,
+
+            dumplings0_raw,
+            ngd0_raw,
+            whiteInv0_raw,
+            redInv0_raw,
+
             dumplings0, ngd0, whiteInv0, redInv0,
-            leaveD, leaveN, leaveW, leaveR,
+            reserveD, reserveN, reserveW, reserveR,
 
             producedD,
-            whiteFromNGD,
-            redFromNGD,
+            whiteFromNGD: whiteFromNGDBase,
+            redFromNGD: redFromNGDBase,
             whiteFromD,
 
-            whiteTotal,
-            redTotal,
+            rewardNGD,
+            rewardRed,
+
+            whiteTotalBase,
+            redTotalBase,
 
             dumplingsAfter,
             ngdAfter,
@@ -216,8 +285,8 @@
             redAfter: afterRed,
 
             farmedDumplings: producedD,
-            farmedWhite: whiteFromNGD + whiteFromD,
-            farmedRed: redFromNGD,
+            farmedWhite: whiteFromNGDBase + whiteFromD,
+            farmedRed: redFromNGDBase,
           };
         }
       }
@@ -226,19 +295,38 @@
     if (!best) {
       const huntsLeft = remHunts;
 
-      const whiteTotal = whiteInv0;
-      const redTotal = redInv0;
+      const whiteTotalBase = whiteInv0;
+      const redTotalBase = redInv0;
 
-      const spendableWhite = Math.max(0, whiteTotal - leaveW);
-      const spendableRed = Math.max(0, redTotal - leaveR);
-      const spendableCandles = spendableWhite + spendableRed;
+      let rewardNGD = 0;
+      let rewardRed = 0;
 
-      const spendBudget = Math.min(huntsLeft, spendableCandles);
-      const spendRed = Math.min(spendableRed, spendBudget);
-      const spendWhite = spendBudget - spendRed;
+      let spendRed = 0;
+      let spendWhite = 0;
+      let endHeight = currentHeight;
+      let spendBudget = 0;
 
-      const gain = Math.min(MAX_FEET - currentHeight, spendWhite + 2 * spendRed);
-      const endHeight = Math.min(MAX_FEET, currentHeight + gain);
+      for (let iter = 0; iter < 12; iter++) {
+        const spendableWhite = Math.max(0, whiteTotalBase - reserveW);
+        const spendableRed = Math.max(0, (redTotalBase + rewardRed) - reserveR);
+        const spendableCandles = spendableWhite + spendableRed;
+
+        spendBudget = Math.min(huntsLeft, spendableCandles);
+        spendRed = Math.min(spendableRed, spendBudget);
+        spendWhite = spendBudget - spendRed;
+
+        const gain = Math.min(MAX_FEET - currentHeight, spendWhite + 2 * spendRed);
+        endHeight = Math.min(MAX_FEET, currentHeight + gain);
+
+        const rwd = rewardBetween(currentHeight, endHeight);
+        if (rwd.ngd === rewardNGD && rwd.red === rewardRed) break;
+
+        rewardNGD = rwd.ngd;
+        rewardRed = rwd.red;
+      }
+
+      const afterWhite = whiteTotalBase - spendWhite;
+      const afterRed = (redTotalBase + rewardRed) - spendRed;
 
       best = {
         key: [-endHeight, 1, -spendBudget, 0],
@@ -246,10 +334,11 @@
         planStartMs: planStart,
         remDays,
         remHunts,
+        totalHunts,
 
         currentHeight,
         endHeight,
-        gain,
+        gain: Math.min(MAX_FEET - currentHeight, spendWhite + 2 * spendRed),
         maxGain: MAX_FEET - currentHeight,
 
         x: 0, y: 0, z: 0,
@@ -263,21 +352,32 @@
 
         rD, rW, rR,
 
+        chN, chR,
+        chestD, chestW,
+
+        dumplings0_raw,
+        ngd0_raw,
+        whiteInv0_raw,
+        redInv0_raw,
+
         dumplings0, ngd0, whiteInv0, redInv0,
-        leaveD, leaveN, leaveW, leaveR,
+        reserveD, reserveN, reserveW, reserveR,
 
         producedD: 0,
         whiteFromNGD: 0,
         redFromNGD: 0,
         whiteFromD: 0,
 
-        whiteTotal,
-        redTotal,
+        rewardNGD,
+        rewardRed,
+
+        whiteTotalBase,
+        redTotalBase,
 
         dumplingsAfter: dumplings0,
-        ngdAfter: ngd0,
-        whiteAfter: whiteTotal - spendWhite,
-        redAfter: redTotal - spendRed,
+        ngdAfter: ngd0 + rewardNGD,
+        whiteAfter: afterWhite,
+        redAfter: afterRed,
 
         farmedDumplings: 0,
         farmedWhite: 0,
@@ -311,17 +411,20 @@
   }
 
   function renderPlan(plan) {
-    const daysAtRate = plan.huntsPerDay > 0 ? (plan.remHunts / plan.huntsPerDay) : 0;
+    const daysAtRateRem = plan.huntsPerDay > 0 ? (plan.remHunts / plan.huntsPerDay) : 0;
+    const daysAtRateTotal = plan.huntsPerDay > 0 ? (plan.totalHunts / plan.huntsPerDay) : 0;
+
+    const days = (hunts) => (plan.huntsPerDay > 0 ? (hunts / plan.huntsPerDay) : 0);
 
     const summary = `
       <div class="kv">
         <div class="tile">
-          <div class="k">Remaining time</div>
-          <div class="v">${fmt2(plan.remDays)} days</div>
+          <div class="k">Total hunts (full event)</div>
+          <div class="v">${fmt(plan.totalHunts)} (${fmt2(daysAtRateTotal)} days at ${fmt(plan.huntsPerDay)}/day)</div>
         </div>
         <div class="tile">
-          <div class="k">Remaining hunts</div>
-          <div class="v">${fmt(plan.remHunts)} (${fmt2(daysAtRate)} days at ${fmt(plan.huntsPerDay)}/day)</div>
+          <div class="k">Remaining hunts (from planning start)</div>
+          <div class="v">${fmt(plan.remHunts)} (${fmt2(daysAtRateRem)} days)</div>
         </div>
         <div class="tile">
           <div class="k">End height</div>
@@ -340,24 +443,29 @@
           <tr>
             <th>Phase</th>
             <th class="right">Hunts</th>
+            <th class="right">Days</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Farm dumplings</td>
             <td class="right mono">${fmt(plan.z)}</td>
+            <td class="right mono">${fmt2(days(plan.z))}</td>
           </tr>
           <tr>
             <td>Farm white candles (dumpling cheese)</td>
             <td class="right mono">${fmt(plan.y)}</td>
+            <td class="right mono">${fmt2(days(plan.y))}</td>
           </tr>
           <tr>
             <td>Farm candles (NGD)</td>
             <td class="right mono">${fmt(plan.x)}</td>
+            <td class="right mono">${fmt2(days(plan.x))}</td>
           </tr>
           <tr>
             <td>Burn candles (red-first)</td>
             <td class="right mono">${fmt(plan.spendBudget)}</td>
+            <td class="right mono">${fmt2(days(plan.spendBudget))}</td>
           </tr>
         </tbody>
       </table>
@@ -369,54 +477,55 @@
           <tr>
             <th>Resource</th>
             <th class="right">Start</th>
-            <th class="right">Farmed during event</th>
-            <th class="right">Leave</th>
+            <th class="right">Chests</th>
+            <th class="right">Farmed</th>
+            <th class="right">Reward track</th>
+            <th class="right">Reserve</th>
             <th class="right">After event</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Dumplings</td>
-            <td class="right mono">${fmt(plan.dumplings0)}</td>
+            <td class="right mono">${fmt(plan.dumplings0_raw)}</td>
+            <td class="right mono">${fmt(plan.chestD)}</td>
             <td class="right mono">${fmt(plan.farmedDumplings)}</td>
-            <td class="right mono">${fmt(plan.leaveD)}</td>
+            <td class="right mono">0</td>
+            <td class="right mono">${fmt(plan.reserveD)}</td>
             <td class="right mono">${fmt(plan.dumplingsAfter)}</td>
           </tr>
           <tr>
             <td>NGD</td>
-            <td class="right mono">${fmt(plan.ngd0)}</td>
+            <td class="right mono">${fmt(plan.ngd0_raw)}</td>
             <td class="right mono">0</td>
-            <td class="right mono">${fmt(plan.leaveN)}</td>
+            <td class="right mono">0</td>
+            <td class="right mono">${fmt(plan.rewardNGD)}</td>
+            <td class="right mono">${fmt(plan.reserveN)}</td>
             <td class="right mono">${fmt(plan.ngdAfter)}</td>
           </tr>
           <tr>
             <td>White candles</td>
-            <td class="right mono">${fmt(plan.whiteInv0)}</td>
+            <td class="right mono">${fmt(plan.whiteInv0_raw)}</td>
+            <td class="right mono">${fmt(plan.chestW)}</td>
             <td class="right mono">${fmt(plan.farmedWhite)}</td>
-            <td class="right mono">${fmt(plan.leaveW)}</td>
+            <td class="right mono">0</td>
+            <td class="right mono">${fmt(plan.reserveW)}</td>
             <td class="right mono">${fmt(plan.whiteAfter)}</td>
           </tr>
           <tr>
             <td>Red candles</td>
-            <td class="right mono">${fmt(plan.redInv0)}</td>
+            <td class="right mono">${fmt(plan.redInv0_raw)}</td>
+            <td class="right mono">0</td>
             <td class="right mono">${fmt(plan.farmedRed)}</td>
-            <td class="right mono">${fmt(plan.leaveR)}</td>
+            <td class="right mono">${fmt(plan.rewardRed)}</td>
+            <td class="right mono">${fmt(plan.reserveR)}</td>
             <td class="right mono">${fmt(plan.redAfter)}</td>
           </tr>
         </tbody>
       </table>
     `;
 
-    const spend = `
-      <div class="kv">
-        <div class="tile">
-          <div class="k">Spend split</div>
-          <div class="v">red ${fmt(plan.spendRed)} + white ${fmt(plan.spendWhite)} = ${fmt(plan.spendBudget)}</div>
-        </div>
-      </div>
-    `;
-
-    resultEl.innerHTML = summary + alloc + resources + spend;
+    resultEl.innerHTML = summary + alloc + resources;
   }
 
   function readInputs(planStartMs) {
@@ -428,14 +537,30 @@
       ngd: inp.ngd.value,
       whiteInv: inp.whiteInv.value,
       redInv: inp.redInv.value,
-      leaveDumplings: inp.leaveDumplings.value,
-      leaveNGD: inp.leaveNGD.value,
-      leaveWhite: inp.leaveWhite.value,
-      leaveRed: inp.leaveRed.value,
+      chestsNormal: inp.chestsNormal.value,
+      chestsRare: inp.chestsRare.value,
+      reserveDumplings: inp.reserveDumplings.value,
+      reserveNGD: inp.reserveNGD.value,
+      reserveWhite: inp.reserveWhite.value,
+      reserveRed: inp.reserveRed.value,
       rateDumplings: inp.rateDumplings.value,
       rateWhite: inp.rateWhite.value,
       rateRed: inp.rateRed.value,
     };
+  }
+
+  async function loadEventFromRepo() {
+    try {
+      const res = await fetch("./data/event.json", { cache: "no-store" });
+      if (!res.ok) return;
+      const j = await res.json();
+      const s = Date.parse(j.start_utc);
+      const e = Date.parse(j.end_utc);
+      if (Number.isFinite(s) && Number.isFinite(e) && e > s) {
+        EVENT_START_UTC_MS = s;
+        EVENT_END_UTC_MS = e;
+      }
+    } catch {}
   }
 
   function init() {
@@ -474,7 +599,8 @@
     }
   });
 
-  window.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("DOMContentLoaded", async () => {
+    await loadEventFromRepo();
     init();
     setStatus("Ready", "ok");
   });

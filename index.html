@@ -7,204 +7,92 @@
 
   <style>
     :root{
-      --bg: #0b0f17;
-      --panel: rgba(255,255,255,.06);
-      --panel2: rgba(255,255,255,.08);
-      --stroke: rgba(255,255,255,.10);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.65);
-      --muted2: rgba(255,255,255,.45);
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --r: 16px;
-      --pad: 18px;
-      --ok: #23c55e;
-      --bad: #ef4444;
-      --warn: #f59e0b;
-      --focus: rgba(99,102,241,.45);
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --bg:#0b0f17;--panel:rgba(255,255,255,.06);--panel2:rgba(255,255,255,.08);
+      --stroke:rgba(255,255,255,.10);--text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.65);
+      --muted2:rgba(255,255,255,.45);--shadow:0 10px 30px rgba(0,0,0,.35);--r:16px;--pad:18px;
+      --ok:#23c55e;--bad:#ef4444;--warn:#f59e0b;--focus:rgba(99,102,241,.45);
+      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
     }
-
     @media (prefers-color-scheme: light){
       :root{
-        --bg: #f7f7fb;
-        --panel: rgba(10,10,20,.04);
-        --panel2: rgba(10,10,20,.06);
-        --stroke: rgba(10,10,20,.10);
-        --text: rgba(10,10,20,.92);
-        --muted: rgba(10,10,20,.62);
-        --muted2: rgba(10,10,20,.48);
-        --shadow: 0 10px 30px rgba(10,10,20,.10);
-        --focus: rgba(99,102,241,.35);
+        --bg:#f7f7fb;--panel:rgba(10,10,20,.04);--panel2:rgba(10,10,20,.06);
+        --stroke:rgba(10,10,20,.10);--text:rgba(10,10,20,.92);--muted:rgba(10,10,20,.62);
+        --muted2:rgba(10,10,20,.48);--shadow:0 10px 30px rgba(10,10,20,.10);--focus:rgba(99,102,241,.35);
       }
     }
-
-    *{ box-sizing: border-box; }
+    *{box-sizing:border-box}
     body{
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(99,102,241,.22), transparent 55%),
-        radial-gradient(900px 500px at 110% 10%, rgba(34,197,94,.12), transparent 50%),
-        var(--bg);
-      color: var(--text);
-      line-height: 1.35;
+      margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(1200px 600px at 20% -10%, rgba(99,102,241,.22), transparent 55%),
+               radial-gradient(900px 500px at 110% 10%, rgba(34,197,94,.12), transparent 50%),
+               var(--bg);
+      color:var(--text);line-height:1.35;
     }
-
-    .wrap{ max-width: 1020px; margin: 0 auto; padding: 28px 18px 42px; }
-    header{ display: grid; gap: 8px; margin-bottom: 16px; }
-    h1{ font-size: 22px; letter-spacing: .2px; margin: 0; }
-    .sub{ color: var(--muted); font-size: 13px; max-width: 90ch; }
-
-    .grid{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-    @media (min-width: 920px){
-      .grid{ grid-template-columns: 440px 1fr; align-items: start; }
-    }
-
-    .card{
-      background: linear-gradient(180deg, var(--panel2), var(--panel));
-      border: 1px solid var(--stroke);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      padding: var(--pad);
-    }
-
-    .card h2{ font-size: 14px; margin: 0 0 12px; letter-spacing: .2px; }
-
-    .row{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
+    .wrap{max-width:1020px;margin:0 auto;padding:28px 18px 42px}
+    header{display:grid;gap:8px;margin-bottom:16px}
+    h1{font-size:22px;letter-spacing:.2px;margin:0}
+    .sub{color:var(--muted);font-size:13px;max-width:90ch}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px}
+    @media (min-width:920px){.grid{grid-template-columns:440px 1fr;align-items:start}}
+    .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--stroke);
+      border-radius:var(--r);box-shadow:var(--shadow);padding:var(--pad)}
+    .card h2{font-size:14px;margin:0 0 12px;letter-spacing:.2px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     button{
-      appearance: none;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+      appearance:none;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:var(--text);
+      border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;cursor:pointer;
+      transition:transform .05s ease,background .15s ease,border-color .15s ease;
     }
-    button:hover{ background: rgba(255,255,255,.10); }
-    button:active{ transform: translateY(1px); }
-
+    button:hover{background:rgba(255,255,255,.10)}
+    button:active{transform:translateY(1px)}
     .pill{
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
+      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
+      border:1px solid var(--stroke);background:rgba(255,255,255,.04);color:var(--muted);
+      font-size:12px;font-weight:700;
     }
-    .dot{ width: 8px; height: 8px; border-radius: 999px; background: var(--muted2); }
-    .pill.ok{ color: var(--ok); } .pill.ok .dot{ background: var(--ok); }
-    .pill.bad{ color: var(--bad); } .pill.bad .dot{ background: var(--bad); }
-    .pill.warn{ color: var(--warn); } .pill.warn .dot{ background: var(--warn); }
-
-    .form{ display: grid; gap: 12px; margin-top: 12px; }
-    .field{ display: grid; gap: 6px; }
-    label{ font-size: 12px; color: var(--muted); }
-
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--muted2)}
+    .pill.ok{color:var(--ok)} .pill.ok .dot{background:var(--ok)}
+    .pill.bad{color:var(--bad)} .pill.bad .dot{background:var(--bad)}
+    .pill.warn{color:var(--warn)} .pill.warn .dot{background:var(--warn)}
+    .form{display:grid;gap:12px;margin-top:12px}
+    .field{display:grid;gap:6px}
+    label{font-size:12px;color:var(--muted)}
     input{
-      width: 100%;
-      padding: 11px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.04);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+      width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--stroke);
+      background:rgba(255,255,255,.04);color:var(--text);font-size:14px;outline:none;
+      transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
     }
-    input:focus{
-      border-color: rgba(99,102,241,.55);
-      box-shadow: 0 0 0 4px var(--focus);
-      background: rgba(255,255,255,.06);
-    }
-
-    .two{ display: grid; grid-template-columns: 1fr; gap: 12px; }
-    @media (min-width: 560px){ .two{ grid-template-columns: 1fr 1fr; } }
-
-    details{
-      border: 1px solid var(--stroke);
-      border-radius: 14px;
-      background: rgba(255,255,255,.03);
-      padding: 10px 12px;
-    }
+    input:focus{border-color:rgba(99,102,241,.55);box-shadow:0 0 0 4px var(--focus);background:rgba(255,255,255,.06)}
+    .two{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width:560px){.two{grid-template-columns:1fr 1fr}}
+    details{border:1px solid var(--stroke);border-radius:14px;background:rgba(255,255,255,.03);padding:10px 12px}
     summary{
-      cursor: pointer;
-      list-style: none;
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      cursor:pointer;list-style:none;font-size:13px;font-weight:800;color:var(--text);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
     }
-    summary::-webkit-details-marker{ display: none; }
-    .summary-right{ color: var(--muted2); font-weight: 700; font-size: 12px; }
-    .details-body{ margin-top: 10px; display: grid; gap: 12px; }
-
-    .note{ font-size: 12px; color: var(--muted2); margin-top: 8px; }
-
+    summary::-webkit-details-marker{display:none}
+    .summary-right{color:var(--muted2);font-weight:700;font-size:12px}
+    .details-body{margin-top:10px;display:grid;gap:12px}
+    .note{font-size:12px;color:var(--muted2);margin-top:8px}
     .box{
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px dashed rgba(255,255,255,.18);
-      background: rgba(0,0,0,.12);
-      font-family: var(--mono);
-      font-size: 12.5px;
-      white-space: pre-wrap;
+      margin-top:12px;padding:14px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);
+      background:rgba(0,0,0,.12);font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;
     }
     @media (prefers-color-scheme: light){
-      .box{ background: rgba(10,10,20,.03); border-color: rgba(10,10,20,.14); }
+      .box{background:rgba(10,10,20,.03);border-color:rgba(10,10,20,.14)}
     }
-
-    .kv{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    @media (min-width: 640px){ .kv{ grid-template-columns: 1fr 1fr; } }
-
-    .tile{
-      border: 1px solid var(--stroke);
-      border-radius: 14px;
-      background: rgba(255,255,255,.03);
-      padding: 12px;
-    }
-    .tile .k{ color: var(--muted); font-size: 12px; font-weight: 800; }
-    .tile .v{ font-family: var(--mono); font-size: 14px; margin-top: 6px; }
-
-    table{
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      overflow: hidden;
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.02);
-    }
-    th, td{
-      padding: 10px 12px;
-      font-size: 13px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      text-align: left;
-    }
-    th{ color: var(--muted); font-weight: 900; background: rgba(255,255,255,.03); }
-    tr:last-child td{ border-bottom: none; }
-    .mono{ font-family: var(--mono); }
-    .right{ text-align: right; }
+    .kv{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    @media (min-width:640px){.kv{grid-template-columns:1fr 1fr}}
+    .tile{border:1px solid var(--stroke);border-radius:14px;background:rgba(255,255,255,.03);padding:12px}
+    .tile .k{color:var(--muted);font-size:12px;font-weight:800}
+    .tile .v{font-family:var(--mono);font-size:14px;margin-top:6px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;overflow:hidden;border-radius:14px;
+      border:1px solid var(--stroke);background:rgba(255,255,255,.02)}
+    th,td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    th{color:var(--muted);font-weight:900;background:rgba(255,255,255,.03)}
+    tr:last-child td{border-bottom:none}
+    .mono{font-family:var(--mono)}
+    .right{text-align:right}
   </style>
 </head>
 
@@ -212,7 +100,6 @@
   <div class="wrap">
     <header>
       <h1>MH Lunar New Year 2026 Planner</h1>
-        <div class="sub">Plan your hunts, farming, and candle burns to reach your lantern height goal by the end of the event.</div>
     </header>
 
     <div class="grid">
@@ -265,37 +152,57 @@
 
           <details open>
             <summary>
-              To-be reserved (after event)
-              <span class="summary-right">reserved; not consumed</span>
+              Planned chest openings
+              <span class="summary-right">adds to starting resources</span>
+            </summary>
+            <div class="details-body">
+              <div class="two">
+                <div class="field">
+                  <label>Lantern Lighter Treasure Chests to open</label>
+                  <input id="chestsNormal" type="number" min="0" step="1" value="0" />
+                </div>
+                <div class="field">
+                  <label>Rare Lantern Lighter Treasure Chests to open</label>
+                  <input id="chestsRare" type="number" min="0" step="1" value="0" />
+                </div>
+              </div>
+              <div class="note">Normal: +10 dumplings, +2 white candles each. Rare: +20 dumplings, +6 white candles each.</div>
+            </div>
+          </details>
+
+          <details open>
+            <summary>
+              Reserve resources (after event)
+              <span class="summary-right">hard constraints</span>
             </summary>
             <div class="details-body">
               <div class="two">
                 <div class="field">
                   <label>Reserve dumplings</label>
-                  <input id="leaveDumplings" type="number" min="0" step="1" value="0" />
+                  <input id="reserveDumplings" type="number" min="0" step="1" value="0" />
                 </div>
                 <div class="field">
                   <label>Reserve NGD</label>
-                  <input id="leaveNGD" type="number" min="0" step="1" value="0" />
+                  <input id="reserveNGD" type="number" min="0" step="1" value="0" />
                 </div>
               </div>
               <div class="two">
                 <div class="field">
                   <label>Reserve white candles</label>
-                  <input id="leaveWhite" type="number" min="0" step="1" value="0" />
+                  <input id="reserveWhite" type="number" min="0" step="1" value="0" />
                 </div>
                 <div class="field">
                   <label>Reserve red candles</label>
-                  <input id="leaveRed" type="number" min="0" step="1" value="0" />
+                  <input id="reserveRed" type="number" min="0" step="1" value="0" />
                 </div>
               </div>
-              </div>
+            </div>
           </details>
 
           <details>
             <summary>
               Rates (editable)
-              <span class="summary-right">EV per hunt</span>
+              <span class="summary-right">expected value per hunt</span>
             </summary>
             <div class="details-body">
               <div class="two">
@@ -323,8 +230,7 @@
 
         <h2 style="margin-top:14px;">Result</h2>
         <div id="result"></div>
-
-        </section>
+      </section>
     </div>
   </div>
 
